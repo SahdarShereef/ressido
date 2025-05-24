@@ -6,10 +6,13 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
 import { LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProperty } from '@/contexts/PropertyContext';
+import PropertySwitcher from '@/components/PropertySwitcher';
 import { toast } from 'sonner';
 
 const Layout = () => {
   const { logout } = useAuth();
+  const { isLoading } = useProperty();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -18,6 +21,17 @@ const Layout = () => {
     navigate('/auth');
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600 text-lg">Switching property...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 to-blue-50">
@@ -25,10 +39,8 @@ const Layout = () => {
         <div className="flex-1 flex flex-col">
           <header className="h-16 bg-white/80 backdrop-blur-sm border-b border-slate-200/60 flex items-center px-6 shadow-sm">
             <SidebarTrigger className="mr-4" />
-            <div className="flex-1">
-              <h1 className="text-xl font-semibold text-slate-800">PG Manager</h1>
-              <p className="text-sm text-slate-500">Manage your property with ease</p>
-            </div>
+            <PropertySwitcher />
+            <div className="flex-1" />
             <div className="flex items-center space-x-4">
               <Button
                 variant="ghost"
