@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,14 +7,23 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Mail, Phone, Chrome } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, login } = useAuth();
   const [email, setEmail] = useState('');
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleEmailOTP = async () => {
     if (!email) {
@@ -55,18 +63,20 @@ const Auth = () => {
     setTimeout(() => {
       setLoading(false);
       toast.success('Login successful!');
+      login();
       navigate('/');
     }, 1000);
   };
 
   const handleGoogleLogin = () => {
     toast.success('Google login will be implemented with OAuth2');
-    // This would integrate with Google OAuth2
+    login();
     navigate('/');
   };
 
   const handleDemoMode = () => {
     toast.success('Welcome to Demo Mode!');
+    login();
     navigate('/');
   };
 
