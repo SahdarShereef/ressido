@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import Index from "./pages/Index";
+import Auth from "./pages/Auth";
+import TenantOnboarding from "./pages/TenantOnboarding";
 import Tenants from "./pages/Tenants";
 import RoomBlueprint from "./components/RoomBlueprint";
 import Payments from "./pages/Payments";
@@ -23,6 +25,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/onboard/:token" element={<TenantOnboarding />} />
           <Route path="/" element={<Layout />}>
             <Route index element={<Index />} />
             <Route path="tenants" element={<Tenants />} />

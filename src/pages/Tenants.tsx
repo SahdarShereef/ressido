@@ -1,13 +1,15 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Phone, MessageCircle, Eye, Plus, Search } from 'lucide-react';
 import { Input } from "@/components/ui/input";
+import AddTenantModal from "@/components/AddTenantModal";
 
 const Tenants = () => {
+  const [showAddTenantModal, setShowAddTenantModal] = useState(false);
+
   const tenants = [
     {
       id: '1',
@@ -68,13 +70,15 @@ const Tenants = () => {
           <p className="text-slate-600">Manage all your tenants and their information</p>
         </div>
         
-        <Button className="gap-2 bg-gradient-to-r from-blue-500 to-purple-500">
+        <Button 
+          onClick={() => setShowAddTenantModal(true)}
+          className="gap-2 bg-gradient-to-r from-blue-500 to-purple-500"
+        >
           <Plus className="h-4 w-4" />
           Add New Tenant
         </Button>
       </div>
 
-      {/* Search and Filters */}
       <Card className="border-0 shadow-sm">
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -93,7 +97,6 @@ const Tenants = () => {
         </CardContent>
       </Card>
 
-      {/* Tenant Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {tenants.map((tenant, index) => (
           <Card 
@@ -145,6 +148,11 @@ const Tenants = () => {
           </Card>
         ))}
       </div>
+
+      <AddTenantModal 
+        open={showAddTenantModal} 
+        onOpenChange={setShowAddTenantModal} 
+      />
     </div>
   );
 };
