@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Building, MapPin, Upload } from 'lucide-react';
 import { useProperty } from '@/contexts/PropertyContext';
 import { toast } from 'sonner';
@@ -17,6 +18,7 @@ const AddPropertyModal = ({ isOpen, onClose }: AddPropertyModalProps) => {
   const [formData, setFormData] = useState({
     name: '',
     address: '',
+    type: '' as 'boys_pg' | 'girls_pg' | 'co_living' | 'hostel' | '',
     photo: '',
   });
   const { addProperty } = useProperty();
@@ -24,7 +26,7 @@ const AddPropertyModal = ({ isOpen, onClose }: AddPropertyModalProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name.trim() || !formData.address.trim()) {
+    if (!formData.name.trim() || !formData.address.trim() || !formData.type) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -32,19 +34,27 @@ const AddPropertyModal = ({ isOpen, onClose }: AddPropertyModalProps) => {
     addProperty({
       name: formData.name,
       address: formData.address,
+      type: formData.type,
       roomCount: 0,
       tenantCount: 0,
       photo: formData.photo,
     });
 
     toast.success('Property added successfully!');
-    setFormData({ name: '', address: '', photo: '' });
+    setFormData({ name: '', address: '', type: '', photo: '' });
     onClose();
   };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const propertyTypes = [
+    { value: 'boys_pg', label: 'Boys PG' },
+    { value: 'girls_pg', label: 'Girls PG' },
+    { value: 'co_living', label: 'Co-Living' },
+    { value: 'hostel', label: 'Hostel' },
+  ];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -86,6 +96,24 @@ const AddPropertyModal = ({ isOpen, onClose }: AddPropertyModalProps) => {
                 required
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="type" className="text-sm font-medium text-slate-700">
+              Property Type *
+            </Label>
+            <Select value={formData.type} onValueChange={(value) => handleInputChange('type', value)}>
+              <SelectTrigger className="h-11 border-slate-200 focus:border-blue-500 focus:ring-blue-500">
+                <SelectValue placeholder="Select property type" />
+              </SelectTrigger>
+              <SelectContent>
+                {propertyTypes.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
