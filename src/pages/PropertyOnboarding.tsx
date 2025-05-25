@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Building, MapPin, Users, Phone, Calendar, Trash2, Plus } from 'lucide-react';
+import { Separator } from "@/components/ui/separator";
+import { ArrowLeft, Building, MapPin, Users, Phone, Calendar } from 'lucide-react';
 import { useProperty } from '@/contexts/PropertyContext';
-import { Property, Floor, Caretaker, Inmate, Room } from '@/types/property';
+import { Property, RoomType, Floor, Caretaker, Inmate } from '@/types/property';
 import { toast } from 'sonner';
 
 const PropertyOnboarding = () => {
@@ -21,7 +22,8 @@ const PropertyOnboarding = () => {
   const [propertyType, setPropertyType] = useState<'boys_pg' | 'girls_pg' | 'co_living' | 'hostel'>('boys_pg');
   
   // Structure details
-  const [floors, setFloors] = useState<(Floor & { rooms: Room[] })[]>([]);
+  const [floors, setFloors] = useState<Floor[]>([]);
+  const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
   
   // Caretaker details
   const [caretaker, setCaretaker] = useState<Partial<Caretaker>>({
@@ -33,50 +35,24 @@ const PropertyOnboarding = () => {
   const [inmates, setInmates] = useState<Partial<Inmate>[]>([]);
 
   const handleAddFloor = () => {
-    const newFloor = {
+    const newFloor: Floor = {
       id: Date.now().toString(),
       number: floors.length + 1,
       name: `Floor ${floors.length + 1}`,
-      roomIds: [],
-      rooms: []
+      roomIds: []
     };
     setFloors([...floors, newFloor]);
   };
 
-  const handleDeleteFloor = (floorId: string) => {
-    setFloors(floors.filter(floor => floor.id !== floorId));
-  };
-
-  const handleAddRoom = (floorId: string) => {
-    const floor = floors.find(f => f.id === floorId);
-    if (!floor) return;
-
-    const newRoom: Room = {
+  const handleAddRoomType = () => {
+    const newRoomType: RoomType = {
       id: Date.now().toString(),
-      number: `R${floor.rooms.length + 1}`,
-      typeId: '', // No longer using room types
-      floorId: floorId,
-      isOccupied: false,
-      tenantIds: []
+      name: '',
+      sharing: 'single',
+      facilities: [],
+      rent: 0
     };
-
-    setFloors(floors.map(f => 
-      f.id === floorId 
-        ? { ...f, rooms: [...f.rooms, newRoom], roomIds: [...f.roomIds, newRoom.id] }
-        : f
-    ));
-  };
-
-  const handleDeleteRoom = (floorId: string, roomId: string) => {
-    setFloors(floors.map(f => 
-      f.id === floorId 
-        ? { 
-            ...f, 
-            rooms: f.rooms.filter(r => r.id !== roomId),
-            roomIds: f.roomIds.filter(id => id !== roomId)
-          }
-        : f
-    ));
+    setRoomTypes([...roomTypes, newRoomType]);
   };
 
   const handleAddInmate = () => {
@@ -90,10 +66,6 @@ const PropertyOnboarding = () => {
     setInmates([...inmates, newInmate]);
   };
 
-  const handleDeleteInmate = (index: number) => {
-    setInmates(inmates.filter((_, i) => i !== index));
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -102,83 +74,68 @@ const PropertyOnboarding = () => {
       return;
     }
 
-    // Get the logged-in user ID (in a real app, this would come from auth context)
-    const userId = localStorage.getItem('userId') || 'current-user';
-
-    const allRooms = floors.flatMap(floor => floor.rooms);
-    
     const newProperty: Omit<Property, 'id'> = {
       name: propertyName,
       address,
       type: propertyType,
-      roomCount: allRooms.length,
-      tenantCount: inmates.filter(i => i.name).length,
-      floors: floors.map(({ rooms, ...floor }) => floor),
-      rooms: allRooms,
-      caretakers: caretaker.name ? [{ 
-        ...caretaker, 
-        id: Date.now().toString(), 
-        propertyId: '' 
-      } as Caretaker] : [],
-      inmates: inmates.filter(i => i.name).map(inmate => ({
-        ...inmate,
-        id: Date.now().toString(),
-        propertyId: ''
-      })) as Inmate[]
+      roomCount: floors.reduce((acc, floor) => acc + floor.roomIds.length, 0),
+      tenantCount: inmates.length,
+      floors,
+      roomTypes,
+      caretakers: caretaker.name ? [{ ...caretaker, id: Date.now().toString(), propertyId: '' } as Caretaker] : [],
+      inmates: inmates.filter(i => i.name) as Inmate[]
     };
 
     addProperty(newProperty);
     toast.success('Property onboarded successfully!');
-    navigate('/');
+    navigate('/properties');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-slate-600 hover:text-slate-800"
+            onClick={() => navigate('/properties')}
+            className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            Back to Properties
           </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800">Property Onboarding</h1>
+            <p className="text-slate-600">Set up your new property with Ressido</p>
+          </div>
         </div>
 
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">Property Onboarding</h1>
-          <p className="text-slate-600">Set up your new property with Ressido</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-8">
           {/* Basic Property Details */}
-          <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-slate-800">
-                <Building className="h-5 w-5 text-blue-600" />
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building className="h-5 w-5" />
                 Property Details
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="propertyName" className="text-sm font-medium text-slate-700">Property Name *</Label>
+                <div>
+                  <Label htmlFor="propertyName">Property Name *</Label>
                   <Input
                     id="propertyName"
                     value={propertyName}
                     onChange={(e) => setPropertyName(e.target.value)}
                     placeholder="e.g., Sunshine PG"
-                    className="h-12 border-slate-200 focus:border-blue-300"
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="propertyType" className="text-sm font-medium text-slate-700">Property Type *</Label>
+                <div>
+                  <Label htmlFor="propertyType">Property Type *</Label>
                   <Select value={propertyType} onValueChange={(value) => setPropertyType(value as any)}>
-                    <SelectTrigger className="h-12 border-slate-200 focus:border-blue-300">
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -190,239 +147,218 @@ const PropertyOnboarding = () => {
                   </Select>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="address" className="text-sm font-medium text-slate-700">Complete Address *</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input
-                    id="address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="e.g., Koramangala, Bangalore"
-                    className="h-12 pl-10 border-slate-200 focus:border-blue-300"
-                    required
-                  />
-                </div>
+              <div>
+                <Label htmlFor="address">Complete Address *</Label>
+                <Input
+                  id="address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="e.g., Koramangala, Bangalore"
+                  required
+                />
               </div>
             </CardContent>
           </Card>
 
           {/* Structure Definition */}
-          <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center justify-between text-slate-800">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-blue-600" />
-                  Property Structure
-                </div>
-                <Button type="button" onClick={handleAddFloor} variant="outline" size="sm" className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Floor
-                </Button>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Property Structure
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {floors.map((floor, floorIndex) => (
-                <div key={floor.id} className="bg-slate-50 rounded-lg p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <span className="font-medium text-slate-800">Floor {floor.number}</span>
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium">Floors</h3>
+                  <Button type="button" onClick={handleAddFloor} variant="outline" size="sm">
+                    Add Floor
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {floors.map((floor, index) => (
+                    <div key={floor.id} className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg">
+                      <span className="font-medium">Floor {floor.number}</span>
                       <Input
                         value={floor.name}
                         onChange={(e) => {
                           const updatedFloors = [...floors];
-                          updatedFloors[floorIndex].name = e.target.value;
+                          updatedFloors[index].name = e.target.value;
                           setFloors(updatedFloors);
                         }}
                         placeholder="Floor name"
-                        className="max-w-xs h-10 border-slate-200 focus:border-blue-300"
+                        className="flex-1"
                       />
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleAddRoom(floor.id)}
-                        className="bg-green-50 text-green-600 border-green-200 hover:bg-green-100"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Room
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteFloor(floor.id)}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
+                  ))}
+                </div>
+              </div>
 
-                  {floor.rooms.length > 0 && (
-                    <div className="space-y-3">
-                      <h5 className="font-medium text-sm text-slate-700">Rooms on this floor:</h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {floor.rooms.map((room, roomIndex) => (
-                          <div key={room.id} className="flex items-center justify-between p-3 bg-white rounded border border-slate-200">
-                            <Input
-                              value={room.number}
-                              onChange={(e) => {
-                                const updatedFloors = [...floors];
-                                updatedFloors[floorIndex].rooms[roomIndex].number = e.target.value;
-                                setFloors(updatedFloors);
-                              }}
-                              className="flex-1 h-8 mr-2 border-slate-200 focus:border-blue-300"
-                              placeholder="Room #"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteRoom(floor.id, room.id)}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
+              <Separator />
+
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium">Room Types</h3>
+                  <Button type="button" onClick={handleAddRoomType} variant="outline" size="sm">
+                    Add Room Type
+                  </Button>
+                </div>
+                <div className="space-y-4">
+                  {roomTypes.map((roomType, index) => (
+                    <div key={roomType.id} className="p-4 border border-slate-200 rounded-lg space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Input
+                          value={roomType.name}
+                          onChange={(e) => {
+                            const updatedTypes = [...roomTypes];
+                            updatedTypes[index].name = e.target.value;
+                            setRoomTypes(updatedTypes);
+                          }}
+                          placeholder="Room type name"
+                        />
+                        <Select 
+                          value={roomType.sharing} 
+                          onValueChange={(value) => {
+                            const updatedTypes = [...roomTypes];
+                            updatedTypes[index].sharing = value as any;
+                            setRoomTypes(updatedTypes);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="single">Single Sharing</SelectItem>
+                            <SelectItem value="double">Double Sharing</SelectItem>
+                            <SelectItem value="triple">Triple Sharing</SelectItem>
+                            <SelectItem value="dormitory">Dormitory</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          type="number"
+                          value={roomType.rent || ''}
+                          onChange={(e) => {
+                            const updatedTypes = [...roomTypes];
+                            updatedTypes[index].rent = parseInt(e.target.value) || 0;
+                            setRoomTypes(updatedTypes);
+                          }}
+                          placeholder="Monthly rent"
+                        />
                       </div>
                     </div>
-                  )}
+                  ))}
                 </div>
-              ))}
+              </div>
             </CardContent>
           </Card>
 
           {/* Caretaker Information */}
-          <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-slate-800">
-                <Users className="h-5 w-5 text-blue-600" />
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
                 Caretaker Information
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="caretakerName" className="text-sm font-medium text-slate-700">Caretaker Name</Label>
+                <div>
+                  <Label htmlFor="caretakerName">Caretaker Name</Label>
                   <Input
                     id="caretakerName"
                     value={caretaker.name}
                     onChange={(e) => setCaretaker({ ...caretaker, name: e.target.value })}
                     placeholder="Full name"
-                    className="h-12 border-slate-200 focus:border-blue-300"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="caretakerContact" className="text-sm font-medium text-slate-700">Contact Number</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input
-                      id="caretakerContact"
-                      value={caretaker.contact}
-                      onChange={(e) => setCaretaker({ ...caretaker, contact: e.target.value })}
-                      placeholder="Phone number"
-                      className="h-12 pl-10 border-slate-200 focus:border-blue-300"
-                    />
-                  </div>
+                <div>
+                  <Label htmlFor="caretakerContact">Contact Number</Label>
+                  <Input
+                    id="caretakerContact"
+                    value={caretaker.contact}
+                    onChange={(e) => setCaretaker({ ...caretaker, contact: e.target.value })}
+                    placeholder="Phone number"
+                  />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Initial Inmates */}
-          <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center justify-between text-slate-800">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-blue-600" />
-                  Initial Inmates (Optional)
-                </div>
-                <Button type="button" onClick={handleAddInmate} variant="outline" size="sm" className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Inmate
-                </Button>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Initial Inmates (Optional)
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {inmates.map((inmate, index) => (
-                <div key={index} className="p-4 bg-slate-50 rounded-lg">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-medium text-slate-800">Inmate {index + 1}</h4>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteInmate(index)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+              <Button type="button" onClick={handleAddInmate} variant="outline" size="sm">
+                Add Inmate
+              </Button>
+              <div className="space-y-4">
+                {inmates.map((inmate, index) => (
+                  <div key={index} className="p-4 border border-slate-200 rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <Input
+                        value={inmate.name}
+                        onChange={(e) => {
+                          const updatedInmates = [...inmates];
+                          updatedInmates[index].name = e.target.value;
+                          setInmates(updatedInmates);
+                        }}
+                        placeholder="Name"
+                      />
+                      <Input
+                        type="number"
+                        value={inmate.age}
+                        onChange={(e) => {
+                          const updatedInmates = [...inmates];
+                          updatedInmates[index].age = parseInt(e.target.value) || 18;
+                          setInmates(updatedInmates);
+                        }}
+                        placeholder="Age"
+                      />
+                      <Select 
+                        value={inmate.gender} 
+                        onValueChange={(value) => {
+                          const updatedInmates = [...inmates];
+                          updatedInmates[index].gender = value as any;
+                          setInmates(updatedInmates);
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        value={inmate.contact}
+                        onChange={(e) => {
+                          const updatedInmates = [...inmates];
+                          updatedInmates[index].contact = e.target.value;
+                          setInmates(updatedInmates);
+                        }}
+                        placeholder="Contact"
+                      />
+                    </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <Input
-                      value={inmate.name}
-                      onChange={(e) => {
-                        const updatedInmates = [...inmates];
-                        updatedInmates[index].name = e.target.value;
-                        setInmates(updatedInmates);
-                      }}
-                      placeholder="Name"
-                      className="h-10 border-slate-200 focus:border-blue-300"
-                    />
-                    <Input
-                      type="number"
-                      value={inmate.age}
-                      onChange={(e) => {
-                        const updatedInmates = [...inmates];
-                        updatedInmates[index].age = parseInt(e.target.value) || 18;
-                        setInmates(updatedInmates);
-                      }}
-                      placeholder="Age"
-                      className="h-10 border-slate-200 focus:border-blue-300"
-                    />
-                    <Select 
-                      value={inmate.gender} 
-                      onValueChange={(value) => {
-                        const updatedInmates = [...inmates];
-                        updatedInmates[index].gender = value as any;
-                        setInmates(updatedInmates);
-                      }}
-                    >
-                      <SelectTrigger className="h-10 border-slate-200 focus:border-blue-300">
-                        <SelectValue placeholder="Gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      value={inmate.contact}
-                      onChange={(e) => {
-                        const updatedInmates = [...inmates];
-                        updatedInmates[index].contact = e.target.value;
-                        setInmates(updatedInmates);
-                      }}
-                      placeholder="Contact"
-                      className="h-10 border-slate-200 focus:border-blue-300"
-                    />
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </CardContent>
           </Card>
 
           {/* Submit Button */}
-          <div className="flex justify-end space-x-4 pt-6">
-            <Button type="button" variant="outline" onClick={() => navigate('/')} className="h-12 px-6 border-slate-200 text-slate-600 hover:bg-slate-50">
+          <div className="flex justify-end space-x-4">
+            <Button type="button" variant="outline" onClick={() => navigate('/properties')}>
               Cancel
             </Button>
-            <Button type="submit" className="h-12 px-8 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border-0">
+            <Button type="submit" className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
               Onboard Property
             </Button>
           </div>

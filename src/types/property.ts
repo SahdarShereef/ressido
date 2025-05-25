@@ -5,10 +5,18 @@ export interface RoomFacility {
   icon?: string;
 }
 
+export interface RoomType {
+  id: string;
+  name: string;
+  sharing: 'single' | 'double' | 'triple' | 'dormitory';
+  facilities: RoomFacility[];
+  rent?: number;
+}
+
 export interface Room {
   id: string;
   number: string;
-  typeId: string; // Keep for backward compatibility but no longer used
+  typeId: string;
   floorId: string;
   isOccupied: boolean;
   tenantIds: string[];
@@ -50,6 +58,7 @@ export interface Property {
   // Extended structure
   floors?: Floor[];
   rooms?: Room[];
+  roomTypes?: RoomType[];
   caretakers?: Caretaker[];
   inmates?: Inmate[];
   // Geo-tagging
