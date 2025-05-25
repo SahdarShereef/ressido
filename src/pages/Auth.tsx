@@ -86,10 +86,10 @@ const Auth = () => {
         {/* Brand Header */}
         <div className="text-center space-y-2">
           <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl mx-auto flex items-center justify-center mb-4">
-            <span className="text-white font-bold text-2xl">P</span>
+            <span className="text-white font-bold text-2xl">R</span>
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            PG Manager
+            Ressido
           </h1>
           <p className="text-slate-600">Manage your property with ease</p>
         </div>

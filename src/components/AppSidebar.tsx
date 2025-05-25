@@ -19,11 +19,13 @@ import {
   CreditCard, 
   BarChart3, 
   Settings,
-  HelpCircle 
+  HelpCircle,
+  Building2
 } from 'lucide-react';
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Property Onboarding", url: "/onboard-property", icon: Building2 },
   { title: "Tenants", url: "/tenants", icon: Users },
   { title: "Rooms", url: "/rooms", icon: Bed },
   { title: "Payments", url: "/payments", icon: CreditCard },
