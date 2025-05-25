@@ -6,10 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Building, MapPin, Users, Phone, Calendar, Trash2, Plus } from 'lucide-react';
 import { useProperty } from '@/contexts/PropertyContext';
-import { Property, RoomType, Floor, Caretaker, Inmate, Room } from '@/types/property';
+import { Property, Floor, Caretaker, Inmate, Room } from '@/types/property';
 import { toast } from 'sonner';
 
 const PropertyOnboarding = () => {
@@ -23,7 +22,6 @@ const PropertyOnboarding = () => {
   
   // Structure details
   const [floors, setFloors] = useState<(Floor & { rooms: Room[] })[]>([]);
-  const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
   
   // Caretaker details
   const [caretaker, setCaretaker] = useState<Partial<Caretaker>>({
@@ -56,7 +54,7 @@ const PropertyOnboarding = () => {
     const newRoom: Room = {
       id: Date.now().toString(),
       number: `R${floor.rooms.length + 1}`,
-      typeId: roomTypes[0]?.id || '',
+      typeId: '', // No longer using room types
       floorId: floorId,
       isOccupied: false,
       tenantIds: []
@@ -79,21 +77,6 @@ const PropertyOnboarding = () => {
           }
         : f
     ));
-  };
-
-  const handleAddRoomType = () => {
-    const newRoomType: RoomType = {
-      id: Date.now().toString(),
-      name: '',
-      sharing: 'single',
-      facilities: [],
-      rent: 0
-    };
-    setRoomTypes([...roomTypes, newRoomType]);
-  };
-
-  const handleDeleteRoomType = (roomTypeId: string) => {
-    setRoomTypes(roomTypes.filter(rt => rt.id !== roomTypeId));
   };
 
   const handleAddInmate = () => {
@@ -132,7 +115,6 @@ const PropertyOnboarding = () => {
       tenantCount: inmates.filter(i => i.name).length,
       floors: floors.map(({ rooms, ...floor }) => floor),
       rooms: allRooms,
-      roomTypes,
       caretakers: caretaker.name ? [{ 
         ...caretaker, 
         id: Date.now().toString(), 
@@ -151,50 +133,52 @@ const PropertyOnboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate('/')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 text-slate-600 hover:text-slate-800"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Property Onboarding</h1>
-            <p className="text-muted-foreground">Set up your new property with Ressido</p>
-          </div>
+        </div>
+
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">Property Onboarding</h1>
+          <p className="text-slate-600">Set up your new property with Ressido</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Property Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building className="h-5 w-5" />
+          <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-slate-800">
+                <Building className="h-5 w-5 text-blue-600" />
                 Property Details
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="propertyName">Property Name *</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="propertyName" className="text-sm font-medium text-slate-700">Property Name *</Label>
                   <Input
                     id="propertyName"
                     value={propertyName}
                     onChange={(e) => setPropertyName(e.target.value)}
                     placeholder="e.g., Sunshine PG"
+                    className="h-12 border-slate-200 focus:border-blue-300"
                     required
                   />
                 </div>
-                <div>
-                  <Label htmlFor="propertyType">Property Type *</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="propertyType" className="text-sm font-medium text-slate-700">Property Type *</Label>
                   <Select value={propertyType} onValueChange={(value) => setPropertyType(value as any)}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-12 border-slate-200 focus:border-blue-300">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -206,101 +190,32 @@ const PropertyOnboarding = () => {
                   </Select>
                 </div>
               </div>
-              <div>
-                <Label htmlFor="address">Complete Address *</Label>
-                <Input
-                  id="address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="e.g., Koramangala, Bangalore"
-                  required
-                />
+              <div className="space-y-2">
+                <Label htmlFor="address" className="text-sm font-medium text-slate-700">Complete Address *</Label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                    id="address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="e.g., Koramangala, Bangalore"
+                    className="h-12 pl-10 border-slate-200 focus:border-blue-300"
+                    required
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Room Types */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
-                  Room Types
-                </div>
-                <Button type="button" onClick={handleAddRoomType} variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Room Type
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {roomTypes.map((roomType, index) => (
-                <div key={roomType.id} className="p-4 border rounded-lg space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Room Type {index + 1}</h4>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteRoomType(roomType.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Input
-                      value={roomType.name}
-                      onChange={(e) => {
-                        const updatedTypes = [...roomTypes];
-                        updatedTypes[index].name = e.target.value;
-                        setRoomTypes(updatedTypes);
-                      }}
-                      placeholder="Room type name"
-                    />
-                    <Select 
-                      value={roomType.sharing} 
-                      onValueChange={(value) => {
-                        const updatedTypes = [...roomTypes];
-                        updatedTypes[index].sharing = value as any;
-                        setRoomTypes(updatedTypes);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="single">Single Sharing</SelectItem>
-                        <SelectItem value="double">Double Sharing</SelectItem>
-                        <SelectItem value="triple">Triple Sharing</SelectItem>
-                        <SelectItem value="dormitory">Dormitory</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      type="number"
-                      value={roomType.rent || ''}
-                      onChange={(e) => {
-                        const updatedTypes = [...roomTypes];
-                        updatedTypes[index].rent = parseInt(e.target.value) || 0;
-                        setRoomTypes(updatedTypes);
-                      }}
-                      placeholder="Monthly rent"
-                    />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
           {/* Structure Definition */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+          <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center justify-between text-slate-800">
                 <div className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
+                  <MapPin className="h-5 w-5 text-blue-600" />
                   Property Structure
                 </div>
-                <Button type="button" onClick={handleAddFloor} variant="outline" size="sm">
+                <Button type="button" onClick={handleAddFloor} variant="outline" size="sm" className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Floor
                 </Button>
@@ -308,10 +223,10 @@ const PropertyOnboarding = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               {floors.map((floor, floorIndex) => (
-                <div key={floor.id} className="border rounded-lg p-4 space-y-4">
+                <div key={floor.id} className="bg-slate-50 rounded-lg p-4 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <span className="font-medium">Floor {floor.number}</span>
+                      <span className="font-medium text-slate-800">Floor {floor.number}</span>
                       <Input
                         value={floor.name}
                         onChange={(e) => {
@@ -320,7 +235,7 @@ const PropertyOnboarding = () => {
                           setFloors(updatedFloors);
                         }}
                         placeholder="Floor name"
-                        className="max-w-xs"
+                        className="max-w-xs h-10 border-slate-200 focus:border-blue-300"
                       />
                     </div>
                     <div className="flex gap-2">
@@ -329,7 +244,7 @@ const PropertyOnboarding = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleAddRoom(floor.id)}
-                        disabled={roomTypes.length === 0}
+                        className="bg-green-50 text-green-600 border-green-200 hover:bg-green-100"
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         Add Room
@@ -339,60 +254,35 @@ const PropertyOnboarding = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteFloor(floor.id)}
-                        className="text-destructive hover:text-destructive"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
 
-                  {roomTypes.length === 0 && (
-                    <p className="text-sm text-muted-foreground">Please add room types first before adding rooms.</p>
-                  )}
-
                   {floor.rooms.length > 0 && (
-                    <div className="space-y-2">
-                      <h5 className="font-medium text-sm">Rooms on this floor:</h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                    <div className="space-y-3">
+                      <h5 className="font-medium text-sm text-slate-700">Rooms on this floor:</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         {floor.rooms.map((room, roomIndex) => (
-                          <div key={room.id} className="flex items-center justify-between p-2 bg-muted rounded">
-                            <div className="flex items-center gap-2">
-                              <Input
-                                value={room.number}
-                                onChange={(e) => {
-                                  const updatedFloors = [...floors];
-                                  updatedFloors[floorIndex].rooms[roomIndex].number = e.target.value;
-                                  setFloors(updatedFloors);
-                                }}
-                                className="w-20 h-8"
-                                placeholder="Room #"
-                              />
-                              <Select
-                                value={room.typeId}
-                                onValueChange={(value) => {
-                                  const updatedFloors = [...floors];
-                                  updatedFloors[floorIndex].rooms[roomIndex].typeId = value;
-                                  setFloors(updatedFloors);
-                                }}
-                              >
-                                <SelectTrigger className="w-32 h-8">
-                                  <SelectValue placeholder="Type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {roomTypes.map((type) => (
-                                    <SelectItem key={type.id} value={type.id}>
-                                      {type.name || 'Unnamed'}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
+                          <div key={room.id} className="flex items-center justify-between p-3 bg-white rounded border border-slate-200">
+                            <Input
+                              value={room.number}
+                              onChange={(e) => {
+                                const updatedFloors = [...floors];
+                                updatedFloors[floorIndex].rooms[roomIndex].number = e.target.value;
+                                setFloors(updatedFloors);
+                              }}
+                              className="flex-1 h-8 mr-2 border-slate-200 focus:border-blue-300"
+                              placeholder="Room #"
+                            />
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteRoom(floor.id, room.id)}
-                              className="text-destructive hover:text-destructive h-8 w-8 p-0"
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
@@ -407,46 +297,51 @@ const PropertyOnboarding = () => {
           </Card>
 
           {/* Caretaker Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
+          <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-slate-800">
+                <Users className="h-5 w-5 text-blue-600" />
                 Caretaker Information
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="caretakerName">Caretaker Name</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="caretakerName" className="text-sm font-medium text-slate-700">Caretaker Name</Label>
                   <Input
                     id="caretakerName"
                     value={caretaker.name}
                     onChange={(e) => setCaretaker({ ...caretaker, name: e.target.value })}
                     placeholder="Full name"
+                    className="h-12 border-slate-200 focus:border-blue-300"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="caretakerContact">Contact Number</Label>
-                  <Input
-                    id="caretakerContact"
-                    value={caretaker.contact}
-                    onChange={(e) => setCaretaker({ ...caretaker, contact: e.target.value })}
-                    placeholder="Phone number"
-                  />
+                <div className="space-y-2">
+                  <Label htmlFor="caretakerContact" className="text-sm font-medium text-slate-700">Contact Number</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      id="caretakerContact"
+                      value={caretaker.contact}
+                      onChange={(e) => setCaretaker({ ...caretaker, contact: e.target.value })}
+                      placeholder="Phone number"
+                      className="h-12 pl-10 border-slate-200 focus:border-blue-300"
+                    />
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Initial Inmates */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+          <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center justify-between text-slate-800">
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
+                  <Calendar className="h-5 w-5 text-blue-600" />
                   Initial Inmates (Optional)
                 </div>
-                <Button type="button" onClick={handleAddInmate} variant="outline" size="sm">
+                <Button type="button" onClick={handleAddInmate} variant="outline" size="sm" className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Inmate
                 </Button>
@@ -454,15 +349,15 @@ const PropertyOnboarding = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {inmates.map((inmate, index) => (
-                <div key={index} className="p-4 border rounded-lg">
+                <div key={index} className="p-4 bg-slate-50 rounded-lg">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-medium">Inmate {index + 1}</h4>
+                    <h4 className="font-medium text-slate-800">Inmate {index + 1}</h4>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDeleteInmate(index)}
-                      className="text-destructive hover:text-destructive"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -476,6 +371,7 @@ const PropertyOnboarding = () => {
                         setInmates(updatedInmates);
                       }}
                       placeholder="Name"
+                      className="h-10 border-slate-200 focus:border-blue-300"
                     />
                     <Input
                       type="number"
@@ -486,6 +382,7 @@ const PropertyOnboarding = () => {
                         setInmates(updatedInmates);
                       }}
                       placeholder="Age"
+                      className="h-10 border-slate-200 focus:border-blue-300"
                     />
                     <Select 
                       value={inmate.gender} 
@@ -495,7 +392,7 @@ const PropertyOnboarding = () => {
                         setInmates(updatedInmates);
                       }}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-10 border-slate-200 focus:border-blue-300">
                         <SelectValue placeholder="Gender" />
                       </SelectTrigger>
                       <SelectContent>
@@ -512,6 +409,7 @@ const PropertyOnboarding = () => {
                         setInmates(updatedInmates);
                       }}
                       placeholder="Contact"
+                      className="h-10 border-slate-200 focus:border-blue-300"
                     />
                   </div>
                 </div>
@@ -520,11 +418,11 @@ const PropertyOnboarding = () => {
           </Card>
 
           {/* Submit Button */}
-          <div className="flex justify-end space-x-4">
-            <Button type="button" variant="outline" onClick={() => navigate('/')}>
+          <div className="flex justify-end space-x-4 pt-6">
+            <Button type="button" variant="outline" onClick={() => navigate('/')} className="h-12 px-6 border-slate-200 text-slate-600 hover:bg-slate-50">
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" className="h-12 px-8 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border-0">
               Onboard Property
             </Button>
           </div>
