@@ -1,19 +1,12 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
-interface Property {
-  id: string;
-  name: string;
-  address: string;
-  roomCount: number;
-  tenantCount: number;
-  photo?: string;
-}
+import { Property } from '@/types/property';
 
 interface PropertyContextType {
   properties: Property[];
   selectedProperty: Property | null;
   addProperty: (property: Omit<Property, 'id'>) => void;
+  updateProperty: (property: Property) => void;
   selectProperty: (property: Property) => void;
   isLoading: boolean;
 }
@@ -26,6 +19,7 @@ export const PropertyProvider = ({ children }: { children: React.ReactNode }) =>
       id: '1',
       name: 'Sunshine PG',
       address: 'Koramangala, Bangalore',
+      type: 'boys_pg',
       roomCount: 30,
       tenantCount: 24,
     },
@@ -33,6 +27,7 @@ export const PropertyProvider = ({ children }: { children: React.ReactNode }) =>
       id: '2',
       name: 'Elite Hostel',
       address: 'HSR Layout, Bangalore',
+      type: 'co_living',
       roomCount: 45,
       tenantCount: 38,
     },
@@ -59,6 +54,13 @@ export const PropertyProvider = ({ children }: { children: React.ReactNode }) =>
     setProperties(prev => [...prev, newProperty]);
   };
 
+  const updateProperty = (updatedProperty: Property) => {
+    setProperties(prev => prev.map(p => p.id === updatedProperty.id ? updatedProperty : p));
+    if (selectedProperty?.id === updatedProperty.id) {
+      setSelectedProperty(updatedProperty);
+    }
+  };
+
   const selectProperty = (property: Property) => {
     setIsLoading(true);
     setTimeout(() => {
@@ -72,7 +74,8 @@ export const PropertyProvider = ({ children }: { children: React.ReactNode }) =>
     <PropertyContext.Provider value={{ 
       properties, 
       selectedProperty, 
-      addProperty, 
+      addProperty,
+      updateProperty,
       selectProperty,
       isLoading
     }}>

@@ -49,13 +49,13 @@ export function AppSidebar() {
           {!collapsed ? (
             <div>
               <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                PG Manager
+                Ressido
               </h2>
               <p className="text-sm text-slate-500 mt-1">Property Management</p>
             </div>
           ) : (
             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg mx-auto flex items-center justify-center">
-              <span className="text-white font-bold text-sm">P</span>
+              <span className="text-white font-bold text-sm">R</span>
             </div>
           )}
         </div>

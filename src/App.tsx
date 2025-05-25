@@ -13,6 +13,7 @@ import Layout from "./components/Layout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import PropertySelection from "./pages/PropertySelection";
+import PropertyOnboarding from "./pages/PropertyOnboarding";
 import TenantOnboarding from "./pages/TenantOnboarding";
 import Tenants from "./pages/Tenants";
 import RoomBlueprint from "./components/RoomBlueprint";
@@ -38,6 +39,11 @@ const App = () => (
               <Route path="/properties" element={
                 <ProtectedRoute>
                   <PropertySelection />
+                </ProtectedRoute>
+              } />
+              <Route path="/onboard-property" element={
+                <ProtectedRoute>
+                  <PropertyOnboarding />
                 </ProtectedRoute>
               } />
               <Route path="/" element={

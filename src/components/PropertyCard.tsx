@@ -3,15 +3,7 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Building, Users, Bed } from 'lucide-react';
-
-interface Property {
-  id: string;
-  name: string;
-  address: string;
-  roomCount: number;
-  tenantCount: number;
-  photo?: string;
-}
+import { Property } from '@/types/property';
 
 interface PropertyCardProps {
   property: Property;
@@ -19,6 +11,16 @@ interface PropertyCardProps {
 }
 
 const PropertyCard = ({ property, onSelect }: PropertyCardProps) => {
+  const getPropertyTypeLabel = (type: string) => {
+    const typeMap = {
+      'boys_pg': 'Boys PG',
+      'girls_pg': 'Girls PG', 
+      'co_living': 'Co-Living',
+      'hostel': 'Hostel'
+    };
+    return typeMap[type as keyof typeof typeMap] || type;
+  };
+
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-0 bg-white/80 backdrop-blur-sm">
       <CardContent className="p-6">
@@ -33,6 +35,7 @@ const PropertyCard = ({ property, onSelect }: PropertyCardProps) => {
                   {property.name}
                 </h3>
                 <p className="text-sm text-slate-500">{property.address}</p>
+                <p className="text-xs text-slate-400 mt-1">{getPropertyTypeLabel(property.type)}</p>
               </div>
             </div>
           </div>
