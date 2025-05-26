@@ -1,22 +1,17 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Mail, Phone, Chrome } from 'lucide-react';
-import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import GoogleButton from '@/components/GoogleButton';
+import PhoneOtpLogin from '@/components/PhoneOtpLogin';
+import EmailLinkLogin from '@/components/EmailLinkLogin';
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [mobile, setMobile] = useState('');
-  const [otp, setOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const { isAuthenticated, loading } = useAuth();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -25,60 +20,16 @@ const Auth = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleEmailOTP = async () => {
-    if (!email) {
-      toast.error('Please enter your email address');
-      return;
-    }
-    setLoading(true);
-    // Simulate OTP sending
-    setTimeout(() => {
-      setOtpSent(true);
-      setLoading(false);
-      toast.success('OTP sent to your email!');
-    }, 1000);
-  };
-
-  const handleMobileOTP = async () => {
-    if (!mobile) {
-      toast.error('Please enter your mobile number');
-      return;
-    }
-    setLoading(true);
-    // Simulate OTP sending
-    setTimeout(() => {
-      setOtpSent(true);
-      setLoading(false);
-      toast.success('OTP sent to your mobile!');
-    }, 1000);
-  };
-
-  const handleVerifyOTP = async () => {
-    if (!otp) {
-      toast.error('Please enter the OTP');
-      return;
-    }
-    setLoading(true);
-    // Simulate OTP verification
-    setTimeout(() => {
-      setLoading(false);
-      toast.success('Login successful!');
-      login();
-      navigate('/');
-    }, 1000);
-  };
-
-  const handleGoogleLogin = () => {
-    toast.success('Google login will be implemented with OAuth2');
-    login();
-    navigate('/');
-  };
-
-  const handleDemoMode = () => {
-    toast.success('Welcome to Demo Mode!');
-    login();
-    navigate('/');
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600 text-lg">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
@@ -101,150 +52,34 @@ const Auth = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <Tabs defaultValue="email" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+            <Tabs defaultValue="google" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="google" className="gap-2">
+                  <Chrome className="h-4 w-4" />
+                  Google
+                </TabsTrigger>
+                <TabsTrigger value="phone" className="gap-2">
+                  <Phone className="h-4 w-4" />
+                  Phone
+                </TabsTrigger>
                 <TabsTrigger value="email" className="gap-2">
                   <Mail className="h-4 w-4" />
                   Email
                 </TabsTrigger>
-                <TabsTrigger value="mobile" className="gap-2">
-                  <Phone className="h-4 w-4" />
-                  Mobile
-                </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="email" className="space-y-4">
-                {!otpSent ? (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="Enter your email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="h-12"
-                      />
-                    </div>
-                    <Button 
-                      onClick={handleEmailOTP}
-                      disabled={loading}
-                      className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
-                    >
-                      {loading ? 'Sending...' : 'Send OTP'}
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="otp">Enter OTP</Label>
-                      <Input
-                        id="otp"
-                        placeholder="Enter 6-digit OTP"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        className="h-12 text-center text-lg tracking-widest"
-                        maxLength={6}
-                      />
-                    </div>
-                    <Button 
-                      onClick={handleVerifyOTP}
-                      disabled={loading}
-                      className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
-                    >
-                      {loading ? 'Verifying...' : 'Verify & Login'}
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => setOtpSent(false)}
-                      className="w-full text-slate-600"
-                    >
-                      Back to Email
-                    </Button>
-                  </>
-                )}
+              <TabsContent value="google" className="space-y-4">
+                <GoogleButton />
               </TabsContent>
 
-              <TabsContent value="mobile" className="space-y-4">
-                {!otpSent ? (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="mobile">Mobile Number</Label>
-                      <Input
-                        id="mobile"
-                        type="tel"
-                        placeholder="+91 98765 43210"
-                        value={mobile}
-                        onChange={(e) => setMobile(e.target.value)}
-                        className="h-12"
-                      />
-                    </div>
-                    <Button 
-                      onClick={handleMobileOTP}
-                      disabled={loading}
-                      className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
-                    >
-                      {loading ? 'Sending...' : 'Send OTP'}
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="otp-mobile">Enter OTP</Label>
-                      <Input
-                        id="otp-mobile"
-                        placeholder="Enter 6-digit OTP"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        className="h-12 text-center text-lg tracking-widest"
-                        maxLength={6}
-                      />
-                    </div>
-                    <Button 
-                      onClick={handleVerifyOTP}
-                      disabled={loading}
-                      className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
-                    >
-                      {loading ? 'Verifying...' : 'Verify & Login'}
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => setOtpSent(false)}
-                      className="w-full text-slate-600"
-                    >
-                      Back to Mobile
-                    </Button>
-                  </>
-                )}
+              <TabsContent value="phone" className="space-y-4">
+                <PhoneOtpLogin />
+              </TabsContent>
+
+              <TabsContent value="email" className="space-y-4">
+                <EmailLinkLogin />
               </TabsContent>
             </Tabs>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-slate-200" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-slate-500">Or continue with</span>
-              </div>
-            </div>
-
-            <Button 
-              variant="outline" 
-              onClick={handleGoogleLogin}
-              className="w-full h-12 gap-2 border-slate-200 hover:bg-slate-50"
-            >
-              <Chrome className="h-4 w-4" />
-              Google
-            </Button>
-
-            <Button 
-              variant="ghost" 
-              onClick={handleDemoMode}
-              className="w-full text-slate-600 hover:text-slate-800"
-            >
-              Explore Demo Mode
-            </Button>
           </CardContent>
         </Card>
 

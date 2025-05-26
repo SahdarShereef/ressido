@@ -4,21 +4,24 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
-import { LogOut } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProperty } from '@/contexts/PropertyContext';
 import PropertySwitcher from '@/components/PropertySwitcher';
 import { toast } from 'sonner';
 
 const Layout = () => {
-  const { logout } = useAuth();
+  const { currentUser, logout } = useAuth();
   const { isLoading } = useProperty();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    toast.success('Logged out successfully!');
-    navigate('/auth');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/auth');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   if (isLoading) {
@@ -42,6 +45,24 @@ const Layout = () => {
             <PropertySwitcher />
             <div className="flex-1" />
             <div className="flex items-center space-x-4">
+              {currentUser && (
+                <div className="flex items-center space-x-2 text-sm text-slate-600">
+                  {currentUser.photoURL ? (
+                    <img 
+                      src={currentUser.photoURL} 
+                      alt={currentUser.displayName || 'User'} 
+                      className="w-8 h-8 rounded-full"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                      <User className="h-4 w-4 text-white" />
+                    </div>
+                  )}
+                  <span className="hidden sm:block">
+                    {currentUser.displayName || currentUser.email || currentUser.phoneNumber}
+                  </span>
+                </div>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -51,9 +72,6 @@ const Layout = () => {
                 <LogOut className="h-4 w-4" />
                 Logout
               </Button>
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">A</span>
-              </div>
             </div>
           </header>
           <main className="flex-1 p-6 overflow-auto">
