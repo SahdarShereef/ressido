@@ -6,143 +6,237 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Building, MapPin, Users, Phone, Calendar, Trash2, Plus } from 'lucide-react';
+import { Switch } from "@/components/ui/switch";
+import { ArrowLeft, Building, MapPin, Plus, Trash2, Users, Bed } from 'lucide-react';
 import { useProperty } from '@/contexts/PropertyContext';
-import { Property, RoomType, Floor, Caretaker, Inmate, Room } from '@/types/property';
 import { toast } from 'sonner';
+
+interface Bed {
+  id: string;
+  label: string;
+  occupied: boolean;
+}
+
+interface Room {
+  id: string;
+  label: string;
+  type: 'single' | 'double' | 'triple';
+  attachedWashroom: boolean;
+  beds: Bed[];
+}
+
+interface Floor {
+  id: string;
+  label: string;
+  rooms: Room[];
+}
+
+interface PropertyFormData {
+  name: string;
+  address: string;
+  city: string;
+  type: 'boys_pg' | 'girls_pg' | 'co_living' | 'hostel';
+  caretakerName: string;
+  caretakerContact: string;
+  floors: Floor[];
+}
 
 const PropertyOnboarding = () => {
   const navigate = useNavigate();
   const { addProperty } = useProperty();
   
-  // Basic property details
-  const [propertyName, setPropertyName] = useState('');
-  const [address, setAddress] = useState('');
-  const [propertyType, setPropertyType] = useState<'boys_pg' | 'girls_pg' | 'co_living' | 'hostel'>('boys_pg');
-  
-  // Structure details
-  const [floors, setFloors] = useState<(Floor & { rooms: Room[] })[]>([]);
-  const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
-  
-  // Caretaker details
-  const [caretaker, setCaretaker] = useState<Partial<Caretaker>>({
+  const [formData, setFormData] = useState<PropertyFormData>({
     name: '',
-    contact: ''
+    address: '',
+    city: '',
+    type: 'boys_pg',
+    caretakerName: '',
+    caretakerContact: '',
+    floors: []
   });
-  
-  // Sample inmates data
-  const [inmates, setInmates] = useState<Partial<Inmate>[]>([]);
 
-  const handleAddFloor = () => {
-    const newFloor = {
+  const addFloor = () => {
+    const newFloor: Floor = {
       id: Date.now().toString(),
-      number: floors.length + 1,
-      name: `Floor ${floors.length + 1}`,
-      roomIds: [],
+      label: '',
       rooms: []
     };
-    setFloors([...floors, newFloor]);
+    setFormData(prev => ({
+      ...prev,
+      floors: [...prev.floors, newFloor]
+    }));
   };
 
-  const handleDeleteFloor = (floorId: string) => {
-    setFloors(floors.filter(floor => floor.id !== floorId));
+  const removeFloor = (floorId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      floors: prev.floors.filter(floor => floor.id !== floorId)
+    }));
   };
 
-  const handleAddRoom = (floorId: string) => {
-    const floor = floors.find(f => f.id === floorId);
-    if (!floor) return;
+  const updateFloor = (floorId: string, label: string) => {
+    setFormData(prev => ({
+      ...prev,
+      floors: prev.floors.map(floor =>
+        floor.id === floorId ? { ...floor, label } : floor
+      )
+    }));
+  };
 
+  const addRoom = (floorId: string) => {
     const newRoom: Room = {
       id: Date.now().toString(),
-      number: `R${floor.rooms.length + 1}`,
-      typeId: roomTypes[0]?.id || '',
-      floorId: floorId,
-      isOccupied: false,
-      tenantIds: []
+      label: '',
+      type: 'single',
+      attachedWashroom: false,
+      beds: []
     };
-
-    setFloors(floors.map(f => 
-      f.id === floorId 
-        ? { ...f, rooms: [...f.rooms, newRoom], roomIds: [...f.roomIds, newRoom.id] }
-        : f
-    ));
+    
+    setFormData(prev => ({
+      ...prev,
+      floors: prev.floors.map(floor =>
+        floor.id === floorId 
+          ? { ...floor, rooms: [...floor.rooms, newRoom] }
+          : floor
+      )
+    }));
   };
 
-  const handleDeleteRoom = (floorId: string, roomId: string) => {
-    setFloors(floors.map(f => 
-      f.id === floorId 
-        ? { 
-            ...f, 
-            rooms: f.rooms.filter(r => r.id !== roomId),
-            roomIds: f.roomIds.filter(id => id !== roomId)
-          }
-        : f
-    ));
+  const removeRoom = (floorId: string, roomId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      floors: prev.floors.map(floor =>
+        floor.id === floorId
+          ? { ...floor, rooms: floor.rooms.filter(room => room.id !== roomId) }
+          : floor
+      )
+    }));
   };
 
-  const handleAddRoomType = () => {
-    const newRoomType: RoomType = {
+  const updateRoom = (floorId: string, roomId: string, updates: Partial<Room>) => {
+    setFormData(prev => ({
+      ...prev,
+      floors: prev.floors.map(floor =>
+        floor.id === floorId
+          ? {
+              ...floor,
+              rooms: floor.rooms.map(room =>
+                room.id === roomId ? { ...room, ...updates } : room
+              )
+            }
+          : floor
+      )
+    }));
+  };
+
+  const addBed = (floorId: string, roomId: string) => {
+    const newBed: Bed = {
       id: Date.now().toString(),
-      name: '',
-      sharing: 'single',
-      facilities: [],
-      rent: 0
+      label: '',
+      occupied: false
     };
-    setRoomTypes([...roomTypes, newRoomType]);
+
+    setFormData(prev => ({
+      ...prev,
+      floors: prev.floors.map(floor =>
+        floor.id === floorId
+          ? {
+              ...floor,
+              rooms: floor.rooms.map(room =>
+                room.id === roomId
+                  ? { ...room, beds: [...room.beds, newBed] }
+                  : room
+              )
+            }
+          : floor
+      )
+    }));
   };
 
-  const handleDeleteRoomType = (roomTypeId: string) => {
-    setRoomTypes(roomTypes.filter(rt => rt.id !== roomTypeId));
+  const removeBed = (floorId: string, roomId: string, bedId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      floors: prev.floors.map(floor =>
+        floor.id === floorId
+          ? {
+              ...floor,
+              rooms: floor.rooms.map(room =>
+                room.id === roomId
+                  ? { ...room, beds: room.beds.filter(bed => bed.id !== bedId) }
+                  : room
+              )
+            }
+          : floor
+      )
+    }));
   };
 
-  const handleAddInmate = () => {
-    const newInmate: Partial<Inmate> = {
-      name: '',
-      age: 18,
-      gender: 'male',
-      contact: '',
-      moveInDate: new Date().toISOString().split('T')[0]
-    };
-    setInmates([...inmates, newInmate]);
+  const updateBed = (floorId: string, roomId: string, bedId: string, updates: Partial<Bed>) => {
+    setFormData(prev => ({
+      ...prev,
+      floors: prev.floors.map(floor =>
+        floor.id === floorId
+          ? {
+              ...floor,
+              rooms: floor.rooms.map(room =>
+                room.id === roomId
+                  ? {
+                      ...room,
+                      beds: room.beds.map(bed =>
+                        bed.id === bedId ? { ...bed, ...updates } : bed
+                      )
+                    }
+                  : room
+              )
+            }
+          : floor
+      )
+    }));
   };
 
-  const handleDeleteInmate = (index: number) => {
-    setInmates(inmates.filter((_, i) => i !== index));
+  const isFormValid = () => {
+    return (
+      formData.name.trim() &&
+      formData.address.trim() &&
+      formData.city.trim() &&
+      formData.caretakerName.trim() &&
+      formData.caretakerContact.trim() &&
+      formData.floors.length > 0 &&
+      formData.floors.some(floor => 
+        floor.rooms.length > 0 && 
+        floor.rooms.some(room => room.beds.length > 0)
+      )
+    );
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!propertyName || !address) {
-      toast.error('Please fill in all required fields');
+    if (!isFormValid()) {
+      toast.error('Please complete all required fields and add at least one floor, room, and bed');
       return;
     }
 
-    // Get the logged-in user ID (in a real app, this would come from auth context)
-    const userId = localStorage.getItem('userId') || 'current-user';
+    // Calculate totals
+    const totalRooms = formData.floors.reduce((total, floor) => total + floor.rooms.length, 0);
+    const totalBeds = formData.floors.reduce((total, floor) => 
+      total + floor.rooms.reduce((roomTotal, room) => roomTotal + room.beds.length, 0), 0
+    );
 
-    const allRooms = floors.flatMap(floor => floor.rooms);
-    
-    const newProperty: Omit<Property, 'id'> = {
-      name: propertyName,
-      address,
-      type: propertyType,
-      roomCount: allRooms.length,
-      tenantCount: inmates.filter(i => i.name).length,
-      floors: floors.map(({ rooms, ...floor }) => floor),
-      rooms: allRooms,
-      roomTypes,
-      caretakers: caretaker.name ? [{ 
-        ...caretaker, 
-        id: Date.now().toString(), 
-        propertyId: '' 
-      } as Caretaker] : [],
-      inmates: inmates.filter(i => i.name).map(inmate => ({
-        ...inmate,
+    const newProperty = {
+      name: formData.name,
+      address: formData.address,
+      type: formData.type,
+      roomCount: totalRooms,
+      tenantCount: 0, // Will be updated when tenants are added
+      // Store the structured data for future use
+      floors: formData.floors,
+      caretakers: [{
         id: Date.now().toString(),
+        name: formData.caretakerName,
+        contact: formData.caretakerContact,
         propertyId: ''
-      })) as Inmate[]
+      }]
     };
 
     addProperty(newProperty);
@@ -152,7 +246,7 @@ const PropertyOnboarding = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Button
@@ -162,360 +256,256 @@ const PropertyOnboarding = () => {
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Property Onboarding</h1>
-            <p className="text-muted-foreground">Set up your new property with Ressido</p>
+            <h1 className="text-2xl font-bold text-foreground">Property Onboarding</h1>
+            <p className="text-sm text-muted-foreground">Add a new property to your portfolio</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Property Details */}
+          {/* Property Details */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <Building className="h-5 w-5" />
                 Property Details
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="grid gap-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="propertyName">Property Name *</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Property Name *</Label>
                   <Input
-                    id="propertyName"
-                    value={propertyName}
-                    onChange={(e) => setPropertyName(e.target.value)}
-                    placeholder="e.g., Sunshine PG"
-                    required
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Enter property name"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="propertyType">Property Type *</Label>
-                  <Select value={propertyType} onValueChange={(value) => setPropertyType(value as any)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="boys_pg">Boys PG</SelectItem>
-                      <SelectItem value="girls_pg">Girls PG</SelectItem>
-                      <SelectItem value="co_living">Co-Living</SelectItem>
-                      <SelectItem value="hostel">Hostel</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-2">
+                  <Label htmlFor="city">City *</Label>
+                  <Input
+                    id="city"
+                    value={formData.city}
+                    onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                    placeholder="Enter city"
+                  />
                 </div>
               </div>
-              <div>
-                <Label htmlFor="address">Complete Address *</Label>
+
+              <div className="space-y-2">
+                <Label htmlFor="address">Full Address *</Label>
                 <Input
                   id="address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="e.g., Koramangala, Bangalore"
-                  required
+                  value={formData.address}
+                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                  placeholder="Enter complete address"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="type">Property Type *</Label>
+                <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value as any }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="boys_pg">Boys PG</SelectItem>
+                    <SelectItem value="girls_pg">Girls PG</SelectItem>
+                    <SelectItem value="co_living">Co-Living</SelectItem>
+                    <SelectItem value="hostel">Hostel</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="caretakerName">Caretaker Name *</Label>
+                  <Input
+                    id="caretakerName"
+                    value={formData.caretakerName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, caretakerName: e.target.value }))}
+                    placeholder="Enter caretaker name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="caretakerContact">Caretaker Contact *</Label>
+                  <Input
+                    id="caretakerContact"
+                    value={formData.caretakerContact}
+                    onChange={(e) => setFormData(prev => ({ ...prev, caretakerContact: e.target.value }))}
+                    placeholder="Enter contact number"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Room Types */}
+          {/* Floors Section */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+              <CardTitle className="flex items-center justify-between text-lg">
                 <div className="flex items-center gap-2">
                   <MapPin className="h-5 w-5" />
-                  Room Types
+                  Floors
                 </div>
-                <Button type="button" onClick={handleAddRoomType} variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Room Type
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {roomTypes.map((roomType, index) => (
-                <div key={roomType.id} className="p-4 border rounded-lg space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Room Type {index + 1}</h4>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteRoomType(roomType.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Input
-                      value={roomType.name}
-                      onChange={(e) => {
-                        const updatedTypes = [...roomTypes];
-                        updatedTypes[index].name = e.target.value;
-                        setRoomTypes(updatedTypes);
-                      }}
-                      placeholder="Room type name"
-                    />
-                    <Select 
-                      value={roomType.sharing} 
-                      onValueChange={(value) => {
-                        const updatedTypes = [...roomTypes];
-                        updatedTypes[index].sharing = value as any;
-                        setRoomTypes(updatedTypes);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="single">Single Sharing</SelectItem>
-                        <SelectItem value="double">Double Sharing</SelectItem>
-                        <SelectItem value="triple">Triple Sharing</SelectItem>
-                        <SelectItem value="dormitory">Dormitory</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      type="number"
-                      value={roomType.rent || ''}
-                      onChange={(e) => {
-                        const updatedTypes = [...roomTypes];
-                        updatedTypes[index].rent = parseInt(e.target.value) || 0;
-                        setRoomTypes(updatedTypes);
-                      }}
-                      placeholder="Monthly rent"
-                    />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Structure Definition */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
-                  Property Structure
-                </div>
-                <Button type="button" onClick={handleAddFloor} variant="outline" size="sm">
+                <Button type="button" onClick={addFloor} variant="outline" size="sm">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Floor
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {floors.map((floor, floorIndex) => (
-                <div key={floor.id} className="border rounded-lg p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <span className="font-medium">Floor {floor.number}</span>
-                      <Input
-                        value={floor.name}
-                        onChange={(e) => {
-                          const updatedFloors = [...floors];
-                          updatedFloors[floorIndex].name = e.target.value;
-                          setFloors(updatedFloors);
-                        }}
-                        placeholder="Floor name"
-                        className="max-w-xs"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleAddRoom(floor.id)}
-                        disabled={roomTypes.length === 0}
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Room
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteFloor(floor.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {roomTypes.length === 0 && (
-                    <p className="text-sm text-muted-foreground">Please add room types first before adding rooms.</p>
-                  )}
-
-                  {floor.rooms.length > 0 && (
-                    <div className="space-y-2">
-                      <h5 className="font-medium text-sm">Rooms on this floor:</h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                        {floor.rooms.map((room, roomIndex) => (
-                          <div key={room.id} className="flex items-center justify-between p-2 bg-muted rounded">
-                            <div className="flex items-center gap-2">
-                              <Input
-                                value={room.number}
-                                onChange={(e) => {
-                                  const updatedFloors = [...floors];
-                                  updatedFloors[floorIndex].rooms[roomIndex].number = e.target.value;
-                                  setFloors(updatedFloors);
-                                }}
-                                className="w-20 h-8"
-                                placeholder="Room #"
-                              />
-                              <Select
-                                value={room.typeId}
-                                onValueChange={(value) => {
-                                  const updatedFloors = [...floors];
-                                  updatedFloors[floorIndex].rooms[roomIndex].typeId = value;
-                                  setFloors(updatedFloors);
-                                }}
-                              >
-                                <SelectTrigger className="w-32 h-8">
-                                  <SelectValue placeholder="Type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {roomTypes.map((type) => (
-                                    <SelectItem key={type.id} value={type.id}>
-                                      {type.name || 'Unnamed'}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteRoom(floor.id, room.id)}
-                              className="text-destructive hover:text-destructive h-8 w-8 p-0"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Caretaker Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Caretaker Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="caretakerName">Caretaker Name</Label>
-                  <Input
-                    id="caretakerName"
-                    value={caretaker.name}
-                    onChange={(e) => setCaretaker({ ...caretaker, name: e.target.value })}
-                    placeholder="Full name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="caretakerContact">Contact Number</Label>
-                  <Input
-                    id="caretakerContact"
-                    value={caretaker.contact}
-                    onChange={(e) => setCaretaker({ ...caretaker, contact: e.target.value })}
-                    placeholder="Phone number"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Initial Inmates */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  Initial Inmates (Optional)
-                </div>
-                <Button type="button" onClick={handleAddInmate} variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Inmate
-                </Button>
-              </CardTitle>
-            </CardHeader>
             <CardContent className="space-y-4">
-              {inmates.map((inmate, index) => (
-                <div key={index} className="p-4 border rounded-lg">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-medium">Inmate {index + 1}</h4>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteInmate(index)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <Input
-                      value={inmate.name}
-                      onChange={(e) => {
-                        const updatedInmates = [...inmates];
-                        updatedInmates[index].name = e.target.value;
-                        setInmates(updatedInmates);
-                      }}
-                      placeholder="Name"
-                    />
-                    <Input
-                      type="number"
-                      value={inmate.age}
-                      onChange={(e) => {
-                        const updatedInmates = [...inmates];
-                        updatedInmates[index].age = parseInt(e.target.value) || 18;
-                        setInmates(updatedInmates);
-                      }}
-                      placeholder="Age"
-                    />
-                    <Select 
-                      value={inmate.gender} 
-                      onValueChange={(value) => {
-                        const updatedInmates = [...inmates];
-                        updatedInmates[index].gender = value as any;
-                        setInmates(updatedInmates);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      value={inmate.contact}
-                      onChange={(e) => {
-                        const updatedInmates = [...inmates];
-                        updatedInmates[index].contact = e.target.value;
-                        setInmates(updatedInmates);
-                      }}
-                      placeholder="Contact"
-                    />
-                  </div>
-                </div>
-              ))}
+              {formData.floors.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No floors added yet. Click "Add Floor" to get started.
+                </p>
+              ) : (
+                formData.floors.map((floor, floorIndex) => (
+                  <Card key={floor.id} className="border-l-4 border-l-blue-500">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Input
+                            value={floor.label}
+                            onChange={(e) => updateFloor(floor.id, e.target.value)}
+                            placeholder={`Floor ${floorIndex + 1} name`}
+                            className="max-w-xs"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            onClick={() => addRoom(floor.id)}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Room
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => removeFloor(floor.id)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    
+                    {/* Rooms Section - Only show if floor exists */}
+                    <CardContent className="pt-0">
+                      {floor.rooms.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-2 bg-muted rounded">
+                          No rooms added to this floor yet.
+                        </p>
+                      ) : (
+                        <div className="space-y-3">
+                          {floor.rooms.map((room) => (
+                            <Card key={room.id} className="bg-muted/50">
+                              <CardContent className="p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center gap-3">
+                                    <Input
+                                      value={room.label}
+                                      onChange={(e) => updateRoom(floor.id, room.id, { label: e.target.value })}
+                                      placeholder="Room name/number"
+                                      className="w-32"
+                                    />
+                                    <Select
+                                      value={room.type}
+                                      onValueChange={(value) => updateRoom(floor.id, room.id, { type: value as any })}
+                                    >
+                                      <SelectTrigger className="w-40">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="single">Single</SelectItem>
+                                        <SelectItem value="double">Double</SelectItem>
+                                        <SelectItem value="triple">Triple</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <div className="flex items-center space-x-2">
+                                      <Switch
+                                        checked={room.attachedWashroom}
+                                        onCheckedChange={(checked) => updateRoom(floor.id, room.id, { attachedWashroom: checked })}
+                                      />
+                                      <Label className="text-sm">Attached Washroom</Label>
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      type="button"
+                                      onClick={() => addBed(floor.id, room.id)}
+                                      variant="outline"
+                                      size="sm"
+                                    >
+                                      <Bed className="h-4 w-4 mr-2" />
+                                      Add Bed
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      onClick={() => removeRoom(floor.id, room.id)}
+                                      variant="ghost"
+                                      size="sm"
+                                      className="text-destructive hover:text-destructive"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+
+                                {/* Beds Section - Only show if room exists */}
+                                {room.beds.length === 0 ? (
+                                  <p className="text-xs text-muted-foreground text-center py-2 bg-background rounded">
+                                    No beds added to this room yet.
+                                  </p>
+                                ) : (
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                    {room.beds.map((bed) => (
+                                      <div key={bed.id} className="flex items-center justify-between p-2 bg-background rounded border">
+                                        <div className="flex items-center gap-2">
+                                          <Input
+                                            value={bed.label}
+                                            onChange={(e) => updateBed(floor.id, room.id, bed.id, { label: e.target.value })}
+                                            placeholder="Bed label"
+                                            className="w-20 h-8"
+                                          />
+                                          <div className="flex items-center space-x-2">
+                                            <Switch
+                                              checked={bed.occupied}
+                                              onCheckedChange={(checked) => updateBed(floor.id, room.id, bed.id, { occupied: checked })}
+                                            />
+                                            <Label className="text-xs">Occupied</Label>
+                                          </div>
+                                        </div>
+                                        <Button
+                                          type="button"
+                                          onClick={() => removeBed(floor.id, room.id, bed.id)}
+                                          variant="ghost"
+                                          size="sm"
+                                          className="text-destructive hover:text-destructive h-8 w-8 p-0"
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </CardContent>
           </Card>
 
@@ -524,8 +514,8 @@ const PropertyOnboarding = () => {
             <Button type="button" variant="outline" onClick={() => navigate('/')}>
               Cancel
             </Button>
-            <Button type="submit">
-              Onboard Property
+            <Button type="submit" disabled={!isFormValid()}>
+              Submit Property
             </Button>
           </div>
         </form>

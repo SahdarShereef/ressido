@@ -5,21 +5,23 @@ export interface RoomFacility {
   icon?: string;
 }
 
-export interface RoomType {
+export interface Bed {
   id: string;
-  name: string;
-  sharing: 'single' | 'double' | 'triple' | 'dormitory';
-  facilities: RoomFacility[];
-  rent?: number;
+  label: string;
+  occupied: boolean;
 }
 
 export interface Room {
   id: string;
   number: string;
-  typeId: string;
   floorId: string;
   isOccupied: boolean;
   tenantIds: string[];
+  // New structure for onboarding
+  label?: string;
+  type?: 'single' | 'double' | 'triple';
+  attachedWashroom?: boolean;
+  beds?: Bed[];
 }
 
 export interface Floor {
@@ -27,6 +29,9 @@ export interface Floor {
   number: number;
   name: string;
   roomIds: string[];
+  // New structure for onboarding
+  label?: string;
+  rooms?: Room[];
 }
 
 export interface Caretaker {
@@ -58,7 +63,6 @@ export interface Property {
   // Extended structure
   floors?: Floor[];
   rooms?: Room[];
-  roomTypes?: RoomType[];
   caretakers?: Caretaker[];
   inmates?: Inmate[];
   // Geo-tagging
