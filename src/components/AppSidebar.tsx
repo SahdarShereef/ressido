@@ -20,18 +20,22 @@ import {
   BarChart3, 
   Settings,
   HelpCircle,
-  Building2
+  Building2,
+  Plus
 } from 'lucide-react';
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Property Onboarding", url: "/onboard-property", icon: Building2 },
   { title: "Tenants", url: "/tenants", icon: Users },
   { title: "Rooms", url: "/rooms", icon: Bed },
   { title: "Payments", url: "/payments", icon: CreditCard },
   { title: "Reports", url: "/reports", icon: BarChart3 },
   { title: "Settings", url: "/settings", icon: Settings },
   { title: "Help", url: "/help", icon: HelpCircle },
+];
+
+const propertyManagementItems = [
+  { title: "Add New Property", url: "/onboard-property", icon: Plus },
 ];
 
 export function AppSidebar() {
@@ -61,6 +65,35 @@ export function AppSidebar() {
             </div>
           )}
         </div>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
+            Property Management
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {propertyManagementItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild className="mb-1">
+                    <NavLink
+                      to={item.url}
+                      className={({ isActive: linkActive }) =>
+                        `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                          isActive(item.url) || linkActive
+                            ? "bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border-l-4 border-green-500 font-medium"
+                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
+                        }`
+                      }
+                    >
+                      <item.icon className="h-5 w-5 flex-shrink-0" />
+                      {!collapsed && <span className="truncate">{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
         <SidebarGroup>
           <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
