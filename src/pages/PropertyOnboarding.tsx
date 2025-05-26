@@ -286,117 +286,120 @@ const PropertyOnboarding = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Onboard a New Property</h1>
-          <p className="text-slate-600">Create a comprehensive property profile</p>
-        </div>
+    <div className="mt-6 px-6 py-8 max-w-6xl mx-auto bg-gradient-to-br from-blue-50 to-blue-100">
+    <div className="flex items-center gap-4 mb-6">
+      
+      <div>
+        <h1 className="pl-1 text-2xl font-semibold text-foreground">Onboard a New Property</h1>
+        <p className="pl-1 mt-4 text-sm text-muted-foreground">Create a comprehensive property profile</p>
       </div>
+      <div className="flex justify-end flex-1">
+  <Button
+    variant="outline"
+    size="sm"
+    onClick={() => navigate('/dashboard')}
+  >
+    Back to Dashboard
+  </Button>
+</div>
+    </div>
 
-      {step === 1 && (
-        <Card className="border-0 shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building className="h-5 w-5" />
-              Property Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="name">Property Name *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter property name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="city">City *</Label>
-                <Input
-                  id="city"
-                  value={formData.city}
-                  onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-                  placeholder="Enter city"
-                />
-              </div>
-            </div>
-
+    {step === 1 && (
+      <Card className="border shadow-sm">
+        <CardHeader className="border-b">
+          <CardTitle className="flex items-center gap-2 text-lg font-medium">
+            <Building className="h-5 w-5 text-primary" />
+            Property Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6 pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="address">Full Address *</Label>
+              <Label htmlFor="name">Property Name *</Label>
               <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                placeholder="Enter complete address"
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Enter property name"
               />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="type">Property Type *</Label>
-              <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value as any }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="boys_pg">Boys PG</SelectItem>
-                  <SelectItem value="girls_pg">Girls PG</SelectItem>
-                  <SelectItem value="co_living">Co-Living</SelectItem>
-                  <SelectItem value="hostel">Hostel</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="city">City *</Label>
+              <Input
+                id="city"
+                value={formData.city}
+                onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                placeholder="Enter city"
+              />
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="caretakerName">Caretaker Name *</Label>
-                <Input
-                  id="caretakerName"
-                  value={formData.caretakerName}
-                  onChange={(e) => setFormData(prev => ({ ...prev, caretakerName: e.target.value }))}
-                  placeholder="Enter caretaker name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="caretakerContact">Caretaker Contact *</Label>
-                <Input
-                  id="caretakerContact"
-                  value={formData.caretakerContact}
-                  onChange={(e) => setFormData(prev => ({ ...prev, caretakerContact: e.target.value }))}
-                  placeholder="Enter contact number"
-                />
-              </div>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="address">Full Address *</Label>
+            <Input
+              id="address"
+              value={formData.address}
+              onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+              placeholder="Enter complete address"
+            />
+          </div>
 
-            <div className="flex justify-end">
-              <Button onClick={handleNextStep} disabled={!isPropertyDetailsValid()}>
-                Continue to Property Structure
-              </Button>
+          <div className="space-y-2">
+            <Label htmlFor="type">Property Type *</Label>
+            <Select
+              value={formData.type}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, type: value as any }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="boys_pg">Boys PG</SelectItem>
+                <SelectItem value="girls_pg">Girls PG</SelectItem>
+                <SelectItem value="co_living">Co-Living</SelectItem>
+                <SelectItem value="hostel">Hostel</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="caretakerName">Caretaker Name *</Label>
+              <Input
+                id="caretakerName"
+                value={formData.caretakerName}
+                onChange={(e) => setFormData(prev => ({ ...prev, caretakerName: e.target.value }))}
+                placeholder="Enter caretaker name"
+              />
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <div className="space-y-2">
+              <Label htmlFor="caretakerContact">Caretaker Contact *</Label>
+              <Input
+                id="caretakerContact"
+                value={formData.caretakerContact}
+                onChange={(e) => setFormData(prev => ({ ...prev, caretakerContact: e.target.value }))}
+                placeholder="Enter caretaker contact"
+              />
+            </div>
+          </div>
+
+          <div className="pt-4">
+            <Button onClick={handleNextStep} className="w-full md:w-auto flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-6001">Continue to Structure</Button>
+          </div>
+        </CardContent>
+      </Card>
+    )}
+
 
       {step === 2 && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold flex items-center gap-2">
+              <h2 className="pl-1 text-xl font-semibold flex items-center gap-2">
                 <Users className="h-5 w-5" />
                 Property Structure
               </h2>
-              <p className="text-slate-600 text-sm">Add floors, rooms, and beds to complete your property setup</p>
+              <p className="pl-1 mt-1 text-slate-600 text-sm">Add floors, rooms, and beds to complete your property setup</p>
             </div>
             <Button type="button" onClick={addFloor} variant="outline">
               <Plus className="h-4 w-4 mr-2" />
@@ -576,7 +579,7 @@ const PropertyOnboarding = () => {
               <Button type="button" variant="outline" onClick={() => navigate('/')}>
                 Cancel
               </Button>
-              <Button onClick={handleSubmit} disabled={!isFormValid()}>
+              <Button className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600" onClick={handleSubmit} disabled={!isFormValid()}>
                 Create Property
               </Button>
             </div>
